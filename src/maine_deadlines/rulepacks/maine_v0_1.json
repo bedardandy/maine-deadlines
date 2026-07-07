@@ -1,0 +1,296 @@
+{
+  "$schema_version": "0.1",
+  "pack_id": "maine-deadlines/v0.1",
+  "verified_as_of": "2026-07-07",
+  "description": "Verified Maine court-deadline rules, v0.1. Each rule cites primary authority and carries test vectors. Computed, not docketed.",
+  "rules": [
+    {
+      "id": "civil_answer",
+      "description": "Time to serve an answer to a complaint (civil).",
+      "authority": "M.R.Civ.P. 12(a)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 20,
+      "unit": "days",
+      "triggers": ["service_of_complaint"],
+      "notes": "Maine answer period is 20 days, NOT the federal 21. Rule 12(a). Outside continental US/Canada = 50 days (see civil_answer_overseas). Service-by-mail +3 (Rule 6(c)) applies before roll.",
+      "supports_service_method": true,
+      "test_vectors": [
+        {"name": "20 days lands on a Sunday, rolls to Monday", "trigger": {"service_of_complaint": "2026-01-05"}, "expect": "2026-01-26"},
+        {"name": "20 days mail +3 then roll off Sunday", "trigger": {"service_of_complaint": "2026-01-05"}, "service_method": "mail", "expect": "2026-01-28"},
+        {"name": "last day on a weekend rolls forward", "trigger": {"service_of_complaint": "2026-03-06"}, "expect": "2026-03-26"}
+      ]
+    },
+    {
+      "id": "civil_answer_overseas",
+      "description": "Answer period for a defendant outside the continental US or Canada.",
+      "authority": "M.R.Civ.P. 12(a)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 50,
+      "unit": "days",
+      "triggers": ["service_of_complaint"],
+      "notes": "50-day answer period, outside continental US/Canada. Rule 12(a).",
+      "supports_service_method": true,
+      "test_vectors": [
+        {"name": "50 days plain", "trigger": {"service_of_complaint": "2026-01-05"}, "expect": "2026-02-24"},
+        {"name": "50 days landing to roll", "trigger": {"service_of_complaint": "2026-05-12"}, "expect": "2026-07-01"},
+        {"name": "50 days from Jan 1", "trigger": {"service_of_complaint": "2026-01-01"}, "expect": "2026-02-20"}
+      ]
+    },
+    {
+      "id": "answer_after_rule12_denied",
+      "description": "Time to answer after a Rule 12 motion is denied.",
+      "authority": "M.R.Civ.P. 12(a)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 10,
+      "unit": "days",
+      "triggers": ["notice_of_denial"],
+      "notes": "10 days from notice of the court's action denying a Rule 12 motion. SHORT period (<7? no, =10, so every day counted).",
+      "supports_service_method": true,
+      "test_vectors": [
+        {"name": "10 days plain", "trigger": {"notice_of_denial": "2026-02-02"}, "expect": "2026-02-12"},
+        {"name": "10 days rolling off weekend", "trigger": {"notice_of_denial": "2026-02-05"}, "expect": "2026-02-17"},
+        {"name": "10 days with mail +3", "trigger": {"notice_of_denial": "2026-02-02"}, "service_method": "mail", "expect": "2026-02-17"}
+      ]
+    },
+    {
+      "id": "appeal_civil",
+      "description": "Notice of appeal to the Law Court (civil).",
+      "authority": "M.R.App.P. 2B(c)(1)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_app_p_plus_2024-11-01.pdf",
+      "profile": "appellate",
+      "kind": "forward_days",
+      "period": 21,
+      "unit": "days",
+      "triggers": ["docket_entry"],
+      "notes": "21 days from ENTRY INTO THE DOCKET, not the decision date. A timely post-judgment motion (Rule 50(b), 52, 59) RESETS this period, running 21 days from entry of the order disposing of that motion -- pass the order-entry date as the trigger (trigger replacement).",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "21 days from docket entry", "trigger": {"docket_entry": "2026-04-01"}, "expect": "2026-04-22"},
+        {"name": "21 days rolling off weekend", "trigger": {"docket_entry": "2026-04-04"}, "expect": "2026-04-27"},
+        {"name": "post-judgment-motion reset (order-entry as trigger)", "trigger": {"docket_entry": "2026-05-15"}, "expect": "2026-06-05"}
+      ]
+    },
+    {
+      "id": "cross_appeal",
+      "description": "Notice of cross-appeal.",
+      "authority": "M.R.App.P. 2C(a)(2)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_app_p_plus_2024-11-01.pdf",
+      "profile": "appellate",
+      "kind": "forward_days",
+      "period": 14,
+      "unit": "days",
+      "triggers": ["first_notice_of_appeal"],
+      "notes": "14 days after the first notice of appeal is filed (or the time otherwise allowed, whichever is later, per 2C -- v0.1 encodes the 14-day-from-first-appeal prong).",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "14 days plain", "trigger": {"first_notice_of_appeal": "2026-04-22"}, "expect": "2026-05-06"},
+        {"name": "14 days rolling off weekend", "trigger": {"first_notice_of_appeal": "2026-04-24"}, "expect": "2026-05-08"},
+        {"name": "14 days from a Monday", "trigger": {"first_notice_of_appeal": "2026-06-01"}, "expect": "2026-06-15"}
+      ]
+    },
+    {
+      "id": "sj_earliest_filing",
+      "description": "Earliest a claimant may move for summary judgment.",
+      "authority": "M.R.Civ.P. 56(a)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 20,
+      "unit": "days",
+      "triggers": ["commencement"],
+      "notes": "A claimant must wait 20 days from commencement of the action before moving for summary judgment. This is an EARLIEST-filing date (a floor), not a deadline; the computed date is the earliest permissible filing day.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "20 days from commencement lands on Sunday, rolls to Monday", "trigger": {"commencement": "2026-01-05"}, "expect": "2026-01-26"},
+        {"name": "20 days rolling off weekend", "trigger": {"commencement": "2026-03-06"}, "expect": "2026-03-26"},
+        {"name": "20 days from mid-year", "trigger": {"commencement": "2026-06-01"}, "expect": "2026-06-22"}
+      ]
+    },
+    {
+      "id": "motion_opposition",
+      "description": "Opposition to a motion.",
+      "authority": "M.R.Civ.P. 7(c)(2)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 21,
+      "unit": "days",
+      "triggers": ["motion_filing"],
+      "notes": "Opposition due 21 days from the filing of the motion. Late opposition = waiver (7(c)(3)).",
+      "supports_service_method": true,
+      "test_vectors": [
+        {"name": "21 days from filing", "trigger": {"motion_filing": "2026-02-02"}, "expect": "2026-02-23"},
+        {"name": "21 days rolling off weekend", "trigger": {"motion_filing": "2026-02-04"}, "expect": "2026-02-25"},
+        {"name": "21 days with mail +3", "trigger": {"motion_filing": "2026-02-02"}, "service_method": "mail", "expect": "2026-02-26"}
+      ]
+    },
+    {
+      "id": "motion_reply",
+      "description": "Reply in support of a motion (forward prong).",
+      "authority": "M.R.Civ.P. 7(e)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "forward_days",
+      "period": 7,
+      "unit": "days",
+      "triggers": ["opposition_filing"],
+      "notes": "Reply due 7 days from the opposition. There is ALSO a backward prong -- the reply must be filed at least 2 days before hearing -- computed by the backward helper (see motion_reply_before_hearing).",
+      "supports_service_method": true,
+      "test_vectors": [
+        {"name": "7 days from opposition", "trigger": {"opposition_filing": "2026-02-23"}, "expect": "2026-03-02"},
+        {"name": "7 days rolling off weekend", "trigger": {"opposition_filing": "2026-02-27"}, "expect": "2026-03-06"},
+        {"name": "7 days is NOT short (>=7 counts every day)", "trigger": {"opposition_filing": "2026-01-01"}, "expect": "2026-01-08"}
+      ]
+    },
+    {
+      "id": "motion_reply_before_hearing",
+      "description": "Reply backward prong: at least 2 days before the hearing.",
+      "authority": "M.R.Civ.P. 7(e)",
+      "source_url": "https://www.courts.maine.gov/rules/text/mr_civ_p_only_2026-01-23.pdf",
+      "profile": "civil",
+      "kind": "backward_days",
+      "period": 2,
+      "unit": "days",
+      "triggers": ["hearing"],
+      "notes": "The reply must be filed at least 2 days before the hearing. Backward count -- Maine 6(a) is silent on roll direction (no Law Court authority); engine rolls EARLIER and flags it.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "2 days before hearing (no roll)", "trigger": {"hearing": "2026-03-05"}, "expect": "2026-03-03"},
+        {"name": "2 days before hearing rolling earlier off weekend", "trigger": {"hearing": "2026-03-09"}, "expect": "2026-03-06"},
+        {"name": "2 days before Monday hearing", "trigger": {"hearing": "2026-03-02"}, "expect": "2026-02-27"}
+      ]
+    },
+    {
+      "id": "probate_inventory",
+      "description": "Personal representative's inventory.",
+      "authority": "18-C M.R.S. Sec. 3-706",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec3-706.html",
+      "profile": "probate",
+      "kind": "forward_months",
+      "period": 3,
+      "unit": "months",
+      "triggers": ["appointment"],
+      "notes": "Inventory due 3 months after appointment of the personal representative (not a special administrator/successor). Month anniversary math (Sec. 71(12)/Sec. 72(11-C)), final-day roll applies.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "3 months plain", "trigger": {"appointment": "2026-01-15"}, "expect": "2026-04-15"},
+        {"name": "3 months Nov 30 -> Feb 28 2027 anniversary (Sunday) rolls to Mon Mar 1", "trigger": {"appointment": "2026-11-30"}, "expect": "2027-03-01"},
+        {"name": "3 months anniversary landing on weekend rolls forward", "trigger": {"appointment": "2026-02-28"}, "expect": "2026-05-28"}
+      ]
+    },
+    {
+      "id": "creditor_claim_known",
+      "description": "Bar date for a KNOWN creditor's claim (composite).",
+      "authority": "18-C M.R.S. Sec. 3-801, Sec. 3-803",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec3-801.html",
+      "profile": "probate",
+      "kind": "composite",
+      "composition": {
+        "outer": "earlier_of",
+        "outer_operands": [
+          {"kind": "forward_months", "period": 9, "unit": "months", "trigger": "death", "label": "9mo from death (Sec. 3-803(1) ultimate bar)"}
+        ],
+        "inner": "later_of",
+        "inner_operands": [
+          {"kind": "forward_months", "period": 4, "unit": "months", "trigger": "first_publication", "label": "4mo from first publication (Sec. 3-801(1))"},
+          {"kind": "forward_days", "period": 60, "unit": "days", "trigger": "mailing", "label": "60 days from mailing to known creditor (Sec. 3-801(2))"}
+        ]
+      },
+      "notes": "Known-creditor bar = later_of(4mo publication, 60d mailing), then capped by earlier_of(that, 9mo from death) per Sec. 3-803(1) ultimate bar. Composite/dual-branch is mandatory.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "later-of publication wins, under 9mo cap", "trigger": {"death": "2026-01-01", "first_publication": "2026-02-01", "mailing": "2026-02-01"}, "expect": "2026-06-01"},
+        {"name": "60d mailing wins the later-of", "trigger": {"death": "2026-01-01", "first_publication": "2026-02-01", "mailing": "2026-04-15"}, "expect": "2026-06-15"},
+        {"name": "9mo-from-death cap binds (earlier)", "trigger": {"death": "2026-01-01", "first_publication": "2026-06-01", "mailing": "2026-06-01"}, "expect": "2026-10-01"}
+      ]
+    },
+    {
+      "id": "elective_share",
+      "description": "Deadline to elect the elective share (composite later-of).",
+      "authority": "18-C M.R.S. Sec. 2-211(1)",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec2-211.html",
+      "profile": "probate",
+      "kind": "composite",
+      "composition": {
+        "outer": "later_of",
+        "outer_operands": [
+          {"kind": "forward_months", "period": 9, "unit": "months", "trigger": "death", "label": "9mo after death"},
+          {"kind": "forward_months", "period": 6, "unit": "months", "trigger": "probate_of_will", "label": "6mo after probate of will"}
+        ]
+      },
+      "notes": "Elect within LATER of (9mo after death, 6mo after probate of will). Filing later than 9mo excludes non-probate transfers absent an extension.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "9mo-after-death prong wins", "trigger": {"death": "2026-01-01", "probate_of_will": "2026-02-01"}, "expect": "2026-10-01"},
+        {"name": "6mo-after-probate prong wins", "trigger": {"death": "2026-01-01", "probate_of_will": "2026-06-01"}, "expect": "2026-12-01"},
+        {"name": "later-of with a weekend roll", "trigger": {"death": "2026-02-28", "probate_of_will": "2026-03-01"}, "expect": "2026-11-30"}
+      ]
+    },
+    {
+      "id": "testacy_contest",
+      "description": "Outer limit to contest informal probate (composite later-of).",
+      "authority": "18-C M.R.S. Sec. 3-108(1)",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec3-108.html",
+      "profile": "probate",
+      "kind": "composite",
+      "composition": {
+        "outer": "later_of",
+        "outer_operands": [
+          {"kind": "forward_years", "period": 3, "unit": "years", "trigger": "death", "label": "3 years from death (Sec. 3-108(1) outer limit)"},
+          {"kind": "forward_months", "period": 12, "unit": "months", "trigger": "informal_probate", "label": "12 months from informal probate (Sec. 3-108(1)(C))"}
+        ]
+      },
+      "notes": "Contest of informal probate = later_of(3yr from death, 12mo from informal probate) per Sec. 3-108(1)(C). Year/month anniversary math.",
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "3yr-from-death prong wins; anniversary Jan 1 2029 is a holiday, rolls to Jan 2", "trigger": {"death": "2026-01-01", "informal_probate": "2026-02-01"}, "expect": "2029-01-02"},
+        {"name": "12mo-from-informal-probate prong wins", "trigger": {"death": "2026-01-01", "informal_probate": "2028-06-01"}, "expect": "2029-06-01"},
+        {"name": "leap-year source (Feb 29 2028 + 12mo)", "trigger": {"death": "2020-01-01", "informal_probate": "2028-02-29"}, "expect": "2029-02-28"}
+      ]
+    },
+    {
+      "id": "guardian_annual_report",
+      "description": "Guardian's annual report (court-directed).",
+      "authority": "18-C M.R.S. Sec. 5-317",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec5-317.html",
+      "profile": "probate",
+      "kind": "forward_months",
+      "period": 12,
+      "unit": "months",
+      "triggers": ["appointment"],
+      "notes": "Guardian reports 'at least annually'. There is NO statutory anniversary trigger; the 12-month-from-appointment value is a DEFAULT ASSUMPTION and results carry the court-directed-period flag. Confirm the court's actual directive.",
+      "court_directed": true,
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "default 12mo assumption", "trigger": {"appointment": "2026-01-15"}, "expect": "2027-01-15"},
+        {"name": "default 12mo rolling off weekend", "trigger": {"appointment": "2026-05-16"}, "expect": "2027-05-17"},
+        {"name": "default 12mo from mid-year", "trigger": {"appointment": "2026-07-01"}, "expect": "2027-07-01"}
+      ]
+    },
+    {
+      "id": "conservator_annual_report",
+      "description": "Conservator's annual account (court-directed).",
+      "authority": "18-C M.R.S. Sec. 5-423",
+      "source_url": "https://legislature.maine.gov/statutes/18-C/title18-Csec5-423.html",
+      "profile": "probate",
+      "kind": "forward_months",
+      "period": 12,
+      "unit": "months",
+      "triggers": ["appointment"],
+      "notes": "Conservator accounts annually unless the court directs otherwise. NO fixed statutory anniversary trigger; 12-month-from-appointment is a DEFAULT ASSUMPTION, flagged court-directed. Confirm the court's actual directive.",
+      "court_directed": true,
+      "supports_service_method": false,
+      "test_vectors": [
+        {"name": "default 12mo assumption", "trigger": {"appointment": "2026-03-10"}, "expect": "2027-03-10"},
+        {"name": "default 12mo from Feb 28; anniversary Feb 28 2027 (Sunday) rolls to Mon Mar 1", "trigger": {"appointment": "2026-02-28"}, "expect": "2027-03-01"},
+        {"name": "default 12mo rolling off weekend", "trigger": {"appointment": "2026-11-13"}, "expect": "2027-11-15"}
+      ]
+    }
+  ]
+}

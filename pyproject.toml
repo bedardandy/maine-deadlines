@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maine-deadlines"
+version = "0.1.0"
+description = "Rules-based Maine court-deadline computation (computed, not docketed)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "bedardandy" }]
+keywords = ["maine", "legal", "deadlines", "court", "docketing", "date-computation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+]
+dependencies = []
+
+[project.optional-dependencies]
+# Test-only cross-check against the vacanza `holidays` package. NOT a runtime dep.
+test = ["pytest>=7", "holidays>=0.50"]
+
+[project.urls]
+Homepage = "https://example.org/maine-deadlines"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+maine_deadlines = ["rulepacks/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Note: StaleRulePackWarning is asserted explicitly in the suite (pytest.warns /
+# simplefilter) rather than via a module-qualified ini filter, because the package
+# is not import-resolvable at ini-parse time under a src layout.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+ignore = ["E501"]
