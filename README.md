@@ -109,7 +109,8 @@ composite.
 - **Law Court** — App. 1A / 9(c)(3): clerk-open-day rule + "closed before 4 pm →
   next business day".
 - **MRECS 35(F)** rejection relation-back: 4 business days (7 if the notice was
-  mailed).
+  mailed) — returned as a `RelationBackResult` (never a bare date; carries the
+  reasoning and uncertainty flags).
 
 ## Rules in v0.1
 
@@ -134,9 +135,11 @@ The library resolves these because it must, but flags each one — check `result
   `hearing − N − 1`), then rolls **earlier** off any weekend/holiday. This is the
   conservative reading (preserves full notice); always flagged.
 - **Incomplete rule** (`incomplete_rule`). A v0.1 rule that encodes only one prong of
-  a multi-prong "whichever is later" standard (currently `cross_appeal`) computes
-  that prong alone — which may be *earlier* than the true deadline — and says so via
-  this flag and an assumption. Cross-check the missing prong.
+  a multi-prong standard computes that prong alone and says so via this flag and an
+  assumption. Currently: `cross_appeal` (later-of; the missing prong could make the
+  true deadline *later*) and `motion_reply` (the reply is the *earlier* of 7 days
+  from opposition and 2 days before hearing — compute `motion_reply_before_hearing`
+  too and take the earlier). Cross-check the missing prong.
 - **Shorter-month anniversary** (`shorter_month_anniversary`). No Maine authority
   resolves Jan 31 + 1 month. Default is last-day-of-month (configurable via
   `MonthEndPolicy`); flagged whenever it bites.

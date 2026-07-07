@@ -25,6 +25,7 @@ from enum import StrEnum
 
 from .engine import is_court_day
 from .holidays_me import ClosureCalendar
+from .result import Uncertainty
 
 
 class CourtLevel(StrEnum):
@@ -142,17 +143,43 @@ def efile_file_date(
     )
 
 
+@dataclass(frozen=True)
+class RelationBackResult:
+    """Last day to resubmit a rejected filing so it relates back (MRECS 35(F)).
+
+    Like every computed *deadline* in this library, this is never a bare date: it
+    carries the reasoning, assumptions, and uncertainty flags. ``.date`` is the last
+    business day to resubmit.
+    """
+
+    date: _dt.date
+    detail: str
+    assumptions: tuple[str, ...] = ()
+    uncertainty: frozenset[Uncertainty] = frozenset()
+
+    DISCLAIMER = "Computed, not docketed -- verify against current rules; not legal advice."
+
+    def has_flag(self, flag: Uncertainty) -> bool:
+        return flag in self.uncertainty
+
+    def __str__(self) -> str:
+        flags = ", ".join(sorted(self.uncertainty)) or "none"
+        return f"{self.date.isoformat()} ({self.detail}) [uncertainty: {flags}] -- {self.DISCLAIMER}"
+
+
 def rejection_relation_back_deadline(
     rejection_notice: _dt.date,
     *,
     notice_mailed: bool = False,
     calendar: ClosureCalendar | None = None,
-) -> _dt.date:
+) -> RelationBackResult:
     """Last day to resubmit so a rejected filing relates back (MRECS 35(F)).
 
     4 BUSINESS days from the rejection notice (7 if the notice was mailed). Business
     days = court-open days (weekends + court holidays excluded). The rejection-notice
-    day itself is not counted.
+    day itself is not counted. Returns a :class:`RelationBackResult` (never a bare
+    date), carrying the unscheduled-closure assumption and, if the result lands
+    outside the pinned holiday-table years, the ``unverified_year`` flag.
     """
     cal = calendar or ClosureCalendar()
     n = 7 if notice_mailed else 4
@@ -161,4 +188,23 @@ def rejection_relation_back_deadline(
         cur += _dt.timedelta(days=1)
         if is_court_day(cur, cal):
             counted += 1
-    return cur
+
+    assumptions = [
+        "assumes no unscheduled court closure (storm day / Rule 77(c) order) beyond "
+        "the vendored/injected calendar"
+    ]
+    flags = {Uncertainty.ASSUMES_NO_UNSCHEDULED_CLOSURE}
+    if not cal.is_supported(cur):
+        flags.add(Uncertainty.UNVERIFIED_YEAR)
+        assumptions.append(
+            f"resubmission date {cur.isoformat()} falls outside the pinned holiday-table "
+            "years (2025-2027); closures computed from rules but not test-pinned"
+        )
+    return RelationBackResult(
+        date=cur,
+        detail=f"{n} business day(s) from rejection notice {rejection_notice.isoformat()}"
+        + (" (mailed +3 -> 7)" if notice_mailed else "")
+        + " (MRECS 35(F))",
+        assumptions=tuple(assumptions),
+        uncertainty=frozenset(flags),
+    )

@@ -29,6 +29,7 @@ import datetime as _dt
 from .efiling import (
     CourtLevel,
     FileDateResult,
+    RelationBackResult,
     efile_file_date,
     law_court_file_date,
     rejection_relation_back_deadline,
@@ -105,6 +106,7 @@ __all__ = [
     "VERIFIED_AS_OF",
     "CourtLevel",
     "FileDateResult",
+    "RelationBackResult",
     "efile_file_date",
     "trial_court_file_date",
     "law_court_file_date",

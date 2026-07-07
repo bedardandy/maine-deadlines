@@ -50,14 +50,26 @@ def test_dispatch_by_court_level():
 
 def test_rejection_relation_back_4_business_days():
     # Notice Mon Jan 5 2026 + 4 business days = Fri Jan 9
-    d = rejection_relation_back_deadline(dt.date(2026, 1, 5))
-    assert d == dt.date(2026, 1, 9)
+    r = rejection_relation_back_deadline(dt.date(2026, 1, 5))
+    assert r.date == dt.date(2026, 1, 9)
+    # never a bare date: carries reasoning + the unscheduled-closure assumption
+    from maine_deadlines import Uncertainty
+
+    assert Uncertainty.ASSUMES_NO_UNSCHEDULED_CLOSURE in r.uncertainty
+    assert "Computed, not docketed" in str(r)
 
 
 def test_rejection_relation_back_7_if_mailed():
     # Notice Mon Jan 5 2026 + 7 business days spanning a weekend -> Wed Jan 14
-    d = rejection_relation_back_deadline(dt.date(2026, 1, 5), notice_mailed=True)
-    assert d == dt.date(2026, 1, 14)
+    r = rejection_relation_back_deadline(dt.date(2026, 1, 5), notice_mailed=True)
+    assert r.date == dt.date(2026, 1, 14)
+
+
+def test_rejection_relation_back_unverified_year_flag():
+    from maine_deadlines import Uncertainty
+
+    r = rejection_relation_back_deadline(dt.date(2030, 1, 6))
+    assert Uncertainty.UNVERIFIED_YEAR in r.uncertainty
 
 
 def test_efile_dispatch_accepts_string_court_level():
@@ -77,5 +89,5 @@ def test_efile_dispatch_rejects_unknown_court_level():
 def test_rejection_relation_back_skips_holiday():
     # Notice Fri Jul 2 2027 (Jul 5 Mon holiday). 4 business days: Jul 6,7,8,9 -> Fri Jul 9
     cal = ClosureCalendar()
-    d = rejection_relation_back_deadline(dt.date(2027, 7, 2), calendar=cal)
-    assert d == dt.date(2027, 7, 9)
+    r = rejection_relation_back_deadline(dt.date(2027, 7, 2), calendar=cal)
+    assert r.date == dt.date(2027, 7, 9)

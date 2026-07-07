@@ -96,6 +96,13 @@ def test_incomplete_rule_is_flagged():
     assert any("only one prong" in a for a in r.assumptions)
 
 
+def test_motion_reply_dual_prong_is_flagged_incomplete():
+    # motion_reply computes only the 7-day forward prong; the 2-days-before-hearing
+    # prong may make the true deadline EARLIER, so it must be flagged incomplete.
+    r = md.compute("motion_reply", {"opposition_filing": dt.date(2026, 3, 1)}, as_of=AS_OF)
+    assert Uncertainty.INCOMPLETE_RULE in r.uncertainty
+
+
 def test_court_directed_rules_flagged():
     for rid in ("guardian_annual_report", "conservator_annual_report"):
         r = md.compute(rid, {"appointment": dt.date(2026, 1, 15)}, as_of=AS_OF)

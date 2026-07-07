@@ -143,6 +143,8 @@
       "unit": "days",
       "triggers": ["opposition_filing"],
       "notes": "Reply due 7 days from the opposition. There is ALSO a backward prong -- the reply must be filed at least 2 days before hearing -- computed by the backward helper (see motion_reply_before_hearing).",
+      "incomplete": true,
+      "incomplete_note": "Rule 7(e) has TWO prongs: 7 days from opposition AND at least 2 days before hearing. The operative reply deadline is the EARLIER of the two. This rule computes only the 7-day forward prong; also compute 'motion_reply_before_hearing' with the hearing date and take the earlier result.",
       "supports_service_method": true,
       "test_vectors": [
         {"name": "7 days from opposition", "trigger": {"opposition_filing": "2026-02-23"}, "expect": "2026-03-02"},
