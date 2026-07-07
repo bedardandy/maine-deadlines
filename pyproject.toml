@@ -20,11 +20,23 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Office/Business",
 ]
-dependencies = []
+# Jurisdiction is a pluggable module: the Maine law (rule pack / holidays / profile /
+# service rules) is sourced from ``jurisdiction-maine`` behind the ``legal-jurisdictions``
+# contract, not vendored here. Both are published FOSS peers (github.com/bedardandy).
+dependencies = [
+    "legal-jurisdictions @ git+https://github.com/bedardandy/legal-jurisdictions.git",
+    "jurisdiction-maine @ git+https://github.com/bedardandy/jurisdiction-maine.git",
+]
 
 [project.optional-dependencies]
 # Test-only cross-check against the vacanza `holidays` package. NOT a runtime dep.
-test = ["pytest>=7", "holidays>=0.50"]
+# The federal peer module is optional: needed only for compute(jurisdiction="US")
+# and the Maine-vs-Federal divergence tests, never for Maine-default computation.
+test = [
+    "pytest>=7",
+    "holidays>=0.50",
+    "jurisdiction-federal @ git+https://github.com/bedardandy/jurisdiction-federal.git",
+]
 
 [project.urls]
 Homepage = "https://example.org/maine-deadlines"
