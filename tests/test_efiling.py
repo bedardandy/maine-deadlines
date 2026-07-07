@@ -60,6 +60,20 @@ def test_rejection_relation_back_7_if_mailed():
     assert d == dt.date(2026, 1, 14)
 
 
+def test_efile_dispatch_accepts_string_court_level():
+    # "trial" string must route to the trial-court branch, NOT silently to Law Court.
+    r = efile_file_date(dt.datetime(2026, 1, 6, 15, 0, 0), "trial", clerk_closed_before_4pm=True)
+    assert r.court_level is CourtLevel.TRIAL
+    assert r.file_date == dt.date(2026, 1, 6)  # trial midnight rule ignores clerk hours
+
+
+def test_efile_dispatch_rejects_unknown_court_level():
+    import pytest
+
+    with pytest.raises(ValueError):
+        efile_file_date(dt.datetime(2026, 1, 6, 15, 0, 0), "supreme")
+
+
 def test_rejection_relation_back_skips_holiday():
     # Notice Fri Jul 2 2027 (Jul 5 Mon holiday). 4 business days: Jul 6,7,8,9 -> Fri Jul 9
     cal = ClosureCalendar()

@@ -86,7 +86,9 @@
       "period": 14,
       "unit": "days",
       "triggers": ["first_notice_of_appeal"],
-      "notes": "14 days after the first notice of appeal is filed (or the time otherwise allowed, whichever is later, per 2C -- v0.1 encodes the 14-day-from-first-appeal prong).",
+      "notes": "14 days after the first notice of appeal is filed (or the time otherwise allowed, whichever is later, per 2C -- v0.1 encodes ONLY the 14-day-from-first-appeal prong).",
+      "incomplete": true,
+      "incomplete_note": "Rule 2C(a)(2) is 'later of (14 days after first notice, the time otherwise allowed to appeal)'. v0.1 computes only the 14-day prong; if the appellant's own appeal time is later, the true cross-appeal deadline is later. Cross-check the underlying appeal period.",
       "supports_service_method": false,
       "test_vectors": [
         {"name": "14 days plain", "trigger": {"first_notice_of_appeal": "2026-04-22"}, "expect": "2026-05-06"},
@@ -161,9 +163,9 @@
       "notes": "The reply must be filed at least 2 days before the hearing. Backward count -- Maine 6(a) is silent on roll direction (no Law Court authority); engine rolls EARLIER and flags it.",
       "supports_service_method": false,
       "test_vectors": [
-        {"name": "2 days before hearing (no roll)", "trigger": {"hearing": "2026-03-05"}, "expect": "2026-03-03"},
-        {"name": "2 days before hearing rolling earlier off weekend", "trigger": {"hearing": "2026-03-09"}, "expect": "2026-03-06"},
-        {"name": "2 days before Monday hearing", "trigger": {"hearing": "2026-03-02"}, "expect": "2026-02-27"}
+        {"name": "2 clear days before Thu hearing -> Mon (both endpoints excluded)", "trigger": {"hearing": "2026-03-05"}, "expect": "2026-03-02"},
+        {"name": "2 clear days before Mon hearing -> Fri", "trigger": {"hearing": "2026-03-09"}, "expect": "2026-03-06"},
+        {"name": "2 clear days before Mon hearing rolling earlier off weekend", "trigger": {"hearing": "2026-03-02"}, "expect": "2026-02-27"}
       ]
     },
     {

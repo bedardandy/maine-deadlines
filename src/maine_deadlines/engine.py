@@ -323,25 +323,36 @@ def count_backward_days(
     trace: Trace,
     flags: set[Uncertainty],
 ) -> _dt.date:
-    """Count "at least ``days`` clear days before ``hearing``".
+    """Count the latest date "at least ``days`` **clear** days before ``hearing``".
 
     Maine Rule 6(a) is written for FORWARD periods and never adopted the federal
     count-backward clause; NO Law Court authority resolves direction. The engine
-    takes the CONSERVATIVE reading -- ``days`` full clear days before the hearing,
-    rolling EARLIER off any weekend/holiday -- and ALWAYS sets
-    BACKWARD_ROLL_DIRECTION so the caller cannot miss the ambiguity.
+    takes the CONSERVATIVE reading and ALWAYS sets BACKWARD_ROLL_DIRECTION.
+
+    "Clear days" means both endpoints are excluded: neither the filing day nor the
+    hearing day counts, and there must be ``days`` **full** days strictly between
+    them. So the latest permissible filing date is ``hearing - days - 1`` (e.g. a
+    Thu hearing with a 2-clear-day requirement -> Mon: Tue and Wed are the two full
+    clear days). This is stricter (earlier) than a naive ``hearing - days`` and is
+    the conservative choice that preserves full notice. If the last day lands on a
+    weekend/court holiday it rolls EARLIER still.
     """
     flags.add(Uncertainty.BACKWARD_ROLL_DIRECTION)
     trace.add(
         "backward",
-        f"backward count: at least {days} clear day(s) before hearing {hearing.isoformat()}; "
-        "Maine 6(a) is silent on direction (no Law Court authority) -- rolling EARLIER "
-        "(conservative: preserves full clear notice)",
+        f"backward count: at least {days} CLEAR day(s) before hearing {hearing.isoformat()} "
+        "(both endpoints excluded); Maine 6(a) is silent on direction (no Law Court "
+        "authority) -- rolling EARLIER (conservative: preserves full clear notice)",
         None,
     )
-    # "clear days before": exclude the hearing day itself, count back ``days`` days.
-    nominal = hearing - _dt.timedelta(days=days)
-    trace.add("backward", f"nominal latest date = {nominal.isoformat()}", nominal)
+    # Full clear days: exclude BOTH the hearing day and the filing day -> -days - 1.
+    nominal = hearing - _dt.timedelta(days=days + 1)
+    trace.add(
+        "backward",
+        f"nominal latest date = {nominal.isoformat()} "
+        f"({days} full clear day(s) lie strictly between it and the hearing)",
+        nominal,
+    )
     rolled = roll_backward(nominal, cal, trace, flags)
     if rolled != nominal:
         trace.add("backward", f"rolled earlier to court-open {rolled.isoformat()}", rolled)

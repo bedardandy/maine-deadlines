@@ -89,6 +89,13 @@ def test_composite_trace_shows_fold():
     assert any("earlier_of" in s.detail for s in r.trace.steps)
 
 
+def test_incomplete_rule_is_flagged():
+    # cross_appeal encodes only one prong of a "whichever is later" standard.
+    r = md.compute("cross_appeal", {"first_notice_of_appeal": dt.date(2026, 4, 22)}, as_of=AS_OF)
+    assert Uncertainty.INCOMPLETE_RULE in r.uncertainty
+    assert any("only one prong" in a for a in r.assumptions)
+
+
 def test_court_directed_rules_flagged():
     for rid in ("guardian_annual_report", "conservator_annual_report"):
         r = md.compute(rid, {"appointment": dt.date(2026, 1, 15)}, as_of=AS_OF)

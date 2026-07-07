@@ -128,7 +128,13 @@ def efile_file_date(
     clerk_closed_before_4pm: bool = False,
     calendar: ClosureCalendar | None = None,
 ) -> FileDateResult:
-    """Dispatch to the correct court-level file-date helper."""
+    """Dispatch to the correct court-level file-date helper.
+
+    ``court_level`` is coerced through :class:`CourtLevel` so a bare string
+    (``"trial"``) is accepted, and an unrecognized value raises rather than silently
+    falling through to the Law Court branch.
+    """
+    court_level = CourtLevel(court_level)
     if court_level is CourtLevel.TRIAL:
         return trial_court_file_date(submitted, calendar=calendar)
     return law_court_file_date(

@@ -129,8 +129,14 @@ The library resolves these because it must, but flags each one — check `result
 - **Backward-roll direction** (`backward_roll_direction`). Maine 6(a) is written for
   forward periods and never adopted the federal count-backward clause; no Law Court
   authority resolves which way an "N days before hearing" deadline rolls off a
-  weekend/holiday. The engine rolls **earlier** (conservative — preserves full clear
-  notice) and always flags it.
+  weekend/holiday. The engine reads "at least N days before" as **N full clear
+  days** (both the filing day and the hearing day excluded → latest filing =
+  `hearing − N − 1`), then rolls **earlier** off any weekend/holiday. This is the
+  conservative reading (preserves full notice); always flagged.
+- **Incomplete rule** (`incomplete_rule`). A v0.1 rule that encodes only one prong of
+  a multi-prong "whichever is later" standard (currently `cross_appeal`) computes
+  that prong alone — which may be *earlier* than the true deadline — and says so via
+  this flag and an assumption. Cross-check the missing prong.
 - **Shorter-month anniversary** (`shorter_month_anniversary`). No Maine authority
   resolves Jan 31 + 1 month. Default is last-day-of-month (configurable via
   `MonthEndPolicy`); flagged whenever it bites.

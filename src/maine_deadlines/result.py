@@ -59,6 +59,11 @@ class Uncertainty(StrEnum):
     """A date fell outside the pinned/verified holiday-table years; closures for it
     are computed from rules but not test-pinned."""
 
+    INCOMPLETE_RULE = "incomplete_rule"
+    """The rule encodes only one prong of a multi-prong ("whichever is later")
+    standard; the computed date is that prong alone and may be earlier than the
+    true deadline. See the rule's note for what is missing."""
+
 
 @dataclass(frozen=True)
 class RuleRef:

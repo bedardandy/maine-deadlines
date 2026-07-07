@@ -245,6 +245,14 @@ class RulePack:
                 "confirm the court's actual directive"
             )
 
+        if rule.data.get("incomplete"):
+            flags.add(Uncertainty.INCOMPLETE_RULE)
+            assumptions.append(
+                "this rule encodes only one prong of a multi-prong standard; the true "
+                "deadline may be LATER -- "
+                + str(rule.data.get("incomplete_note", "see the rule note"))
+            )
+
         date = self._dispatch(
             rule, triggers, service_method, cal, month_end_policy, trace, flags
         )

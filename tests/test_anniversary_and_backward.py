@@ -67,11 +67,20 @@ def test_shorter_month_flag_surfaces_in_result():
     assert Uncertainty.SHORTER_MONTH_ANNIVERSARY in r.uncertainty
 
 
+def test_backward_clear_days_excludes_both_endpoints():
+    # Thu Mar 5 2026 hearing, 2 clear days: filing day AND hearing day excluded, so
+    # Tue+Wed are the two full clear days -> latest filing = Mon Mar 2 (hearing-days-1).
+    trace, flags = _fresh()
+    out = eng.count_backward_days(dt.date(2026, 3, 5), 2, cal=ClosureCalendar(), trace=trace, flags=flags)
+    assert out == dt.date(2026, 3, 2)
+    assert Uncertainty.BACKWARD_ROLL_DIRECTION in flags
+
+
 def test_backward_count_rolls_earlier_and_flags():
     trace, flags = _fresh()
-    # hearing Mon Mar 9 2026 - 2 clear days = Sat Mar 7 -> roll EARLIER to Fri Mar 6
-    out = eng.count_backward_days(dt.date(2026, 3, 9), 2, cal=ClosureCalendar(), trace=trace, flags=flags)
-    assert out == dt.date(2026, 3, 6)
+    # hearing Mon Mar 2 2026 - 2 clear days -1 = Fri Feb 27 (Sat/Sun rolled earlier).
+    out = eng.count_backward_days(dt.date(2026, 3, 2), 2, cal=ClosureCalendar(), trace=trace, flags=flags)
+    assert out == dt.date(2026, 2, 27)
     assert Uncertainty.BACKWARD_ROLL_DIRECTION in flags
 
 
