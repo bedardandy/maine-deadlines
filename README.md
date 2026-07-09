@@ -16,7 +16,13 @@ the federal way — and it **never returns a bare date**. Every computation retu
 source URL, `verified_as_of` stamp, a full step-by-step computation trace, an
 assumptions list, and machine-readable uncertainty flags.
 
-Pure Python, **standard library only** (no runtime dependencies). Python ≥ 3.11.
+Python ≥ 3.11. The engine mechanics are pure standard library, but the Maine **law**
+(rule pack / holiday table / counting profile / service rules) is no longer vendored
+here — it is sourced at runtime from the `jurisdiction-maine` module behind the
+`legal-jurisdictions` contract. Both are therefore **runtime dependencies**
+(`from maine_deadlines import compute` raises `ModuleNotFoundError` without them); see
+[Install / use](#install--use). The optional `jurisdiction-federal` peer is needed
+only for `compute(..., jurisdiction="US")`, and `holidays` is a test-only cross-check.
 
 ## Why this exists
 
@@ -29,7 +35,15 @@ impossible.**
 
 ## Install / use
 
-No dependencies. From a checkout:
+Install the package with its runtime dependencies (`legal-jurisdictions` and
+`jurisdiction-maine`, declared in `pyproject.toml` as git peers). From a checkout:
+
+```bash
+pip install -e .            # pulls legal-jurisdictions + jurisdiction-maine
+pip install -e ".[test]"    # also adds pytest, holidays, jurisdiction-federal
+```
+
+Then:
 
 ```python
 import datetime as dt
@@ -57,19 +71,31 @@ compute("civil_answer", {"service_of_complaint": dt.date(2026, 1, 5)}, calendar=
 
 ## Architecture
 
-**Rule pack = DATA; engine = CODE.**
+**Rule pack = DATA; engine = CODE.** As of the jurisdiction-module refactor the
+DATA (rule pack / holiday table / counting profile / service rules) is no longer
+vendored here — it lives in the `jurisdiction-maine` module and is loaded through the
+`legal-jurisdictions` contract (`legal_jurisdictions.load("US-ME")`). This repo now
+ships the rule-*agnostic* engine plus the seam that binds it to a module.
 
 - `engine.py` — the rule-*agnostic* Maine mechanics: counting profiles, weekend/
   holiday rolling, month/year anniversary arithmetic, service-method modifiers,
   backward counting. Knows *how* Maine counts; knows no specific deadline.
-- `holidays_me.py` — a vendored, test-pinned **court-closure** calendar (not a civic
-  holiday list) for 2025–2027, generated from `4 M.R.S. §1051` plus the Judicial
-  Branch's administrative deltas, `verified_as_of` stamped, with an injectable
-  ad-hoc closure layer for storm days / Rule 77(c) orders.
-- `rulepacks/maine_v0_1.json` — the verified v0.1 rules as data. Each entry carries
+- `_jurisdiction.py` — the bridge to the portable jurisdiction-module contract:
+  `default_pack()` builds the pack FROM `jurisdiction-maine`, and the generic core
+  can compute for any installed module (e.g. `jurisdiction="US"` runs the federal
+  count-every-day model via `jurisdiction-federal`).
+- `holidays_me.py` — a test-pinned **court-closure** calendar (not a civic holiday
+  list) for 2025–2027, generated from `4 M.R.S. §1051` plus the Judicial Branch's
+  administrative deltas, `verified_as_of` stamped, with an injectable ad-hoc closure
+  layer for storm days / Rule 77(c) orders. Used directly by the engine's roll logic.
+- `rulepacks/maine_v0_1.json` — a **back-compat MIRROR** of the authoritative rule
+  pack that now lives in `jurisdiction-maine`. It backs the legacy
+  `RulePack.load(DEFAULT_PACK)` path only; `default_pack()`/`compute()` source the
+  live rules from the module. A test (`tests/test_rulepack_mirror.py`) cross-checks
+  the mirror against the module so the two cannot silently drift. Each entry carries
   id, description, authority cite, source URL, `verified_as_of`, trigger event(s),
   period/unit/direction, profile, composition, and **≥ 3 test vectors**.
-- `rulepack.py` — loads + structurally validates the pack and dispatches a rule to
+- `rulepack.py` — loads + structurally validates a pack and dispatches a rule to
   the engine, assembling the `DeadlineResult`.
 - `result.py` — `DeadlineResult`, `Trace`, `RuleRef`, `Uncertainty`.
 - `efiling.py` — court-level e-filing timing helpers (see below).
