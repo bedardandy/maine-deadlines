@@ -97,6 +97,15 @@ def _statutory_closures(year: int) -> dict[_dt.date, str]:
         for obs_date, _kind in _fixed_with_observance(year, month, day):
             add(obs_date, name)
 
+    # Cross-year New Year's Day: when Jan 1 of the FOLLOWING year falls on a
+    # Saturday it is observed the preceding Friday (Dec 31 of THIS year). That
+    # observance FALLS in ``year`` even though the holiday is Jan 1 of year+1, so it
+    # belongs to — and must be found in — this year's table. Pull in Jan 1 of year+1
+    # and keep only the observance(s) whose observed date lands in ``year``.
+    for obs_date, _kind in _fixed_with_observance(year + 1, 1, 1):
+        if obs_date.year == year:
+            add(obs_date, "New Year's Day")
+
     # Floating-Monday holidays (already always on a Monday).
     add(_nth_weekday(year, 1, 0, 3), "Martin Luther King Jr. Day")
     add(_nth_weekday(year, 2, 0, 3), "Washington's Birthday")  # statutory label

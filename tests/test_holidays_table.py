@@ -42,8 +42,11 @@ def test_2026_count_is_13():
 @pytest.mark.parametrize("year", [2025, 2026, 2027])
 def test_supported_years_have_all_named_holidays(year):
     tbl = generated_court_closures(year)
-    # 13 named closures every year (fixed + floating + Thanksgiving Friday).
-    assert len(tbl) == 13
+    # 13 named closures every year (fixed + floating + Thanksgiving Friday), plus a
+    # 14th entry in 2027: Jan 1 2028 is a Saturday, observed the preceding Friday
+    # (Dec 31 2027), which falls in — and belongs to — 2027's table.
+    expected = 14 if year == 2027 else 13
+    assert len(tbl) == expected
 
 
 def test_july3_2026_observance_is_a_closure():
@@ -55,6 +58,28 @@ def test_july3_2026_observance_is_a_closure():
 def test_new_year_2027_is_a_closure():
     # Jan 1 2027 is a Friday -> a plain fixed closure.
     assert dt.date(2027, 1, 1) in generated_court_closures(2027)
+
+
+def test_crossyear_new_year_observance_recognized():
+    # Sat Jan 1 2028 -> observed the preceding Friday, Dec 31 2027. That observance
+    # FALLS in 2027 but belongs to Jan 1 2028; it must be filed under 2027's table
+    # and recognized as a court holiday (the cross-year regression).
+    cal = ClosureCalendar()
+    d = dt.date(2027, 12, 31)
+    assert d in generated_court_closures(2027)
+    assert generated_court_closures(2027)[d] == "New Year's Day"
+    assert cal.is_court_holiday(d)
+    assert cal.holiday_name(d) == "New Year's Day"
+
+
+def test_deadline_landing_on_crossyear_new_year_rolls_forward():
+    # A last day landing on Fri Dec 31 2027 must roll off the closure: Dec 31 Fri
+    # (holiday), Jan 1 Sat, Jan 2 Sun -> Mon Jan 3 2028.
+    from maine_deadlines.engine import roll_forward
+    from maine_deadlines.result import Trace
+
+    rolled = roll_forward(dt.date(2027, 12, 31), ClosureCalendar(), Trace(), set())
+    assert rolled == dt.date(2028, 1, 3)
 
 
 def test_ad_hoc_layer_adds_closure():
