@@ -95,7 +95,14 @@ def _statutory_closures(year: int) -> dict[_dt.date, str]:
         (12, 25, "Christmas Day"),
     ):
         for obs_date, _kind in _fixed_with_observance(year, month, day):
-            add(obs_date, name)
+            # Keep only observances that actually LAND in ``year``. A Saturday
+            # Jan 1 is observed the preceding Friday (Dec 31 of year-1), which
+            # belongs to that prior year's table -- not this one. Without this
+            # guard, ``generated_court_closures(2028)`` would file 2027-12-31 into
+            # the 2028 table. The cross-year block below re-adds such a spilled
+            # observance to the year it genuinely lands in.
+            if obs_date.year == year:
+                add(obs_date, name)
 
     # Cross-year New Year's Day: when Jan 1 of the FOLLOWING year falls on a
     # Saturday it is observed the preceding Friday (Dec 31 of THIS year). That

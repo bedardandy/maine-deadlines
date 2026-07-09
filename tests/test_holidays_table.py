@@ -93,3 +93,14 @@ def test_year_outside_pinned_range_still_computes():
     tbl = generated_court_closures(2030)
     assert dt.date(2030, 12, 25) in tbl
     assert not ClosureCalendar().is_supported(dt.date(2030, 1, 1))
+
+
+@pytest.mark.parametrize("year", [2028, 2033])
+def test_saturday_jan1_year_does_not_leak_prioryear_date(year):
+    # Regression for the asymmetric cross-year fix: a year whose OWN Jan 1 is a
+    # Saturday (observed the preceding Friday, Dec 31 of year-1) must NOT file
+    # that prior-year date into ITS table. Every generated date must be in `year`.
+    assert dt.date(year, 1, 1).weekday() == 5  # sanity: Jan 1 is a Saturday
+    tbl = generated_court_closures(year)
+    leaked = {d: n for d, n in tbl.items() if d.year != year}
+    assert leaked == {}, f"prior/next-year dates leaked into {year}'s table: {leaked}"
